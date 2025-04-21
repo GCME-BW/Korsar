@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Servo</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .text-input {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .number-input {
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WS2812 tester</h1>
+    <a class="button button-on" href="/">Back</a>
+    <input type="number" class="text-input number-input" id="servo_angle" placeholder="Servo angle in degrees" min="0"
+        max="180" step="1" value="0">
+    <a class="button button-on" id="write">Write servo angle</a>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script>
+        document.getElementById("write").onclick = async () => {
+            if (isNaN(getInputValue("servo_angle"))) {
+                alert("Enter correct servo angle");
+                return;
+            }
+            if (parseInt(getInputValue("servo_angle")) < 0) {
+                document.getElementById("servo_angle").value = "0";
+            }
+            if (parseInt(getInputValue("servo_angle")) > 180) {
+                document.getElementById("servo_angle").value = "180";
+            }
+            let servo_angle = Math.floor(parseInt(getInputValue("servo_angle")));
+            writeServo(servo_angle); //TODO
+        }
+
+        async function writeServo(servo_angle) {
+            if (servo_angle < 0 || servo_angle > 180) {
+                throw new Error("Incorrect argument(s)");
+            }
+            let result = await (
+                await fetch(`/api/v1/servo/write`, {
+                    method: "POST",
+                    body: servo_angle,
+                })
+            ).text();//arrayBuffer();
+            return true;
+        }
+    </script>
+</body>
+
+</html>

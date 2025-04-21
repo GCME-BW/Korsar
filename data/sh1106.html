@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SH1106</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SH1106 Display tester</h1>
+    <a class="button button-on" href="/">Back</a>
+    <a class="button button-on" id="probe_btn">Check address (0x3c)</a>
+    <a class="button button-on" id="on_btn">Turn on</a>
+    <a class="button button-on" id="off_btn">Turn off</a>
+    <a class="button button-on" id="fill_btn">Fill all screen</a>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/i2c.js"></script>
+    <script>
+        initI2C();
+        document.getElementById("probe_btn").onclick = async () => {
+            probeI2C(0x3C, 100000)
+                .then((response) => { alert(response ? "Address exists\r\n" : "No device\r\n"); })
+                .catch(() => { alert("Network error!\r\n") });
+        }
+        document.getElementById("on_btn").onclick = async () => {
+            await writeI2C(0x3C, [0x80, 0xAF], 100000);
+        }
+        document.getElementById("off_btn").onclick = async () => {
+            await writeI2C(0x3C, [0x80, 0xAE], 100000);
+        }
+        document.getElementById("fill_btn").onclick = async () => {
+            for (let i = 0; i < 8; i++) {
+                await writeI2C(0x3C, [0x80, 0xB0 + i], 100000);
+                await writeI2C(0x3C, [0x80, 0x02], 100000);
+                await writeI2C(0x3C, [0x80, 0x10], 100000);
+                await writeI2C(0x3C, [0x40, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 100000);
+            }
+        }
+    </script>
+</body>
+
+</html>

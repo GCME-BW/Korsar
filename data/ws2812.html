@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>WS2812</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .text-input {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .number-input {
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WS2812 tester</h1>
+    <a class="button button-on" href="/">Back</a>
+    <input type="number" class="text-input number-input" id="led_number" placeholder="Number of LEDs" min="1" max="40"
+        step="1" value="1">
+    <input type="color" style="margin-bottom: 35px" id="color" value="#00FF00">
+    <a class="button button-on" id="write">Write color</a>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/ws.js"></script>
+    <script src="/js/lib/spi.js"></script>
+    <script>
+        window.addEventListener('load', onload);
+        let flush_arr = Array(24 * 40).fill(0b100);
+
+        function onload(event) {
+            initSPI();
+        }
+
+        document.getElementById("write").onclick = async () => {
+            if (isNaN(getInputValue("led_number"))) {
+                alert("Enter correct LED number");
+                return;
+            }
+            if (parseInt(getInputValue("led_number")) < 1) {
+                document.getElementById("led_number").value = "1";
+            }
+            if (parseInt(getInputValue("led_number")) > 40) {
+                document.getElementById("led_number").value = "40";
+            }
+            let color = parseInt(getInputValue("color").substring(1), 16);//rgb grb
+            color = ((color & 0b1111111100000000) << 8) + ((color & 0b111111110000000000000000) >> 8) + (color & 0xFF);
+            let encoded_color = [];
+            color.toString(2).padStart(24, "0").split('').forEach((char) => encoded_color.push(char === "1" ? 0b110 : 0b100));
+            let leds = Math.floor(parseInt(getInputValue("led_number")));
+            let bytes = [];
+            for (let i = 0; i < leds; i++) {
+                bytes = [...bytes, ...encoded_color];
+            }
+
+            await writeSPI(flush_arr, 2500000, 1, false, false);
+            await writeSPI(bytes, 2500000, 1, false, false);
+        }
+    </script>
+</body>
+
+</html>

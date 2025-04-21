@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SPI Flash</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin: 0px auto 35px;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+        }
+
+        .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+
+        .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+
+        .tg th,
+        .tg td {
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top
+        }
+
+        .progressbar-container {
+            min-width: 180px;
+            width: calc(70vw + 60px);
+            max-width: 360px;
+            color: #000;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            box-sizing: inherit;
+            margin: 0px auto 35px;
+        }
+
+        .progressbar-indicator {
+            color: white;
+            background-color: #3498db !important;
+            padding: 13px 0;
+            border-radius: 8px;
+            box-sizing: inherit;
+        }
+
+        .output-console {
+            min-width: 200px;
+            width: 80vw;
+            max-width: 95vw;
+            height: 500px;
+            font-size: 18px
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SPI Flash tool</h1>
+    <a class="button button-on" href="/">Back</a>
+    <a class="button button-on" id="identify">Read model data</a>
+    <table class="tg">
+        <tbody>
+            <tr>
+                <td>Name</td>
+                <td id="chip-name-field"></td>
+            </tr>
+            <tr>
+                <td>Manufacturer ID</td>
+                <td id="manufacturer-id-field"></td>
+            </tr>
+            <tr>
+                <td>Type ID</td>
+                <td id="type-id-field"></td>
+            </tr>
+            <tr>
+                <td>Capacity</td>
+                <td id="capacity-field"></td>
+            </tr>
+        </tbody>
+    </table>
+    <a class="button button-on" id="read_memory">Read memory</a>
+    <div class="progressbar-container">
+        <div class="progressbar-indicator" style="width:0%" id="read-progress-indicator"></div>
+    </div>
+    <a class="button button-on" id="cancel_reading_memory">Cancel reading</a>
+    <hr style="min-width: 172px;width: calc(70vw + 52px);max-width: 352px;margin-bottom:35px;border-color:gray;" />
+    <label class="button button-on" for="upload_file" id="upload_file_label">Select file to write</label>
+    <input type="file" id="upload_file" style="display: none;" />
+    <a class="button button-on" id="write_memory">Write memory</a>
+    <div class="progressbar-container">
+        <div class="progressbar-indicator" style="width:0%" id="write-progress-indicator"></div>
+    </div>
+    <a class="button button-on" id="cancel_writing_memory">Cancel writing</a>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/ws.js"></script>
+    <script src="/js/lib/spi.js"></script>
+    <script src="/js/lib/spi_flash_db.js"></script>
+    <script>
+        window.addEventListener('load', onload);
+        document.getElementById("upload_file").value = "";
+        let device_busy = false;
+
+        function onload(event) {
+            initSPI();
+        }
+
+        async function getJedecId() {
+            await writeSPI([102]);
+            await writeSPI([153]);
+
+            let id = (await writeReadSPI([159], 3, 0)).read;
+            if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
+                return null;
+            }
+            return id;
+        }
+
+        document.getElementById("identify").onclick = async () => {
+            getJedecId().then((id) => {
+                if (id === null) {
+                    alert("Device seems not to be available!");
+                }
+                document.getElementById("manufacturer-id-field").innerHTML = id[0];
+                document.getElementById("type-id-field").innerHTML = id[1];
+                document.getElementById("capacity-field").innerHTML = spi_flash_db[id[0]][id[1]][id[2]].size;
+                document.getElementById("chip-name-field").innerHTML = spi_flash_db[id[0]][id[1]][id[2]].name;
+                console.log(spi_flash_db[id[0]][id[1]][id[2]]);
+            });
+        };
+
+        document.getElementById("read_memory").onclick = async () => {
+            if (device_busy) return;
+            device_busy = true;
+            document.getElementById("read-progress-indicator").style.width = '1%';
+            let jedec_id = await getJedecId();
+            if (jedec_id === null) {
+                alert("Device seems not to be available!");
+                device_busy = false;
+                return;
+            }
+            document.getElementById("manufacturer-id-field").innerHTML = jedec_id[0];
+            document.getElementById("type-id-field").innerHTML = jedec_id[1];
+            document.getElementById("capacity-field").innerHTML = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].size;
+            document.getElementById("chip-name-field").innerHTML = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].name;
+            let size = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].size;
+            let arr = [];
+            for (let i = 0; i < size / 1024; i++) {
+                if (!device_busy) {
+                    console.log("Reading canceled");
+                    document.getElementById("read-progress-indicator").style.width = '0%';
+                    device_busy = false;
+                    return;
+                }
+                let offset = i * 1024;
+
+                try {
+                    arr.push(...((await writeReadSPI([11, (offset >> 16) & 0xFF, (offset >> 8) & 0xFF, offset & 0xFF, 255], 1024, 255)).read));
+                } catch (error) {
+                    console.log('Connection error:', error);
+                }
+                console.log(i);
+                if (i % Math.floor(size / 1024 / 99) == 0) {
+                    document.getElementById("read-progress-indicator").style.width = `${1 + Math.floor(i / (size / 1024 / 99))}%`;
+                }
+            }
+            download([new Uint8Array(arr)], "test.bin");
+            device_busy = false;
+        }
+
+        document.getElementById("cancel_reading_memory").onclick = () => {
+            device_busy = false;
+        };
+
+        document.getElementById("write_memory").onclick = async () => {
+            if (device_busy) return;
+            device_busy = true;
+            document.getElementById("write-progress-indicator").style.width = '1%';
+            let jedec_id = await getJedecId();
+            if (jedec_id === null) {
+                alert("Device seems not to be available!");
+                document.getElementById("write-progress-indicator").style.width = '0%';
+                device_busy = false;
+                return;
+            }
+            document.getElementById("manufacturer-id-field").innerHTML = jedec_id[0];
+            document.getElementById("type-id-field").innerHTML = jedec_id[1];
+            document.getElementById("capacity-field").innerHTML = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].size;
+            document.getElementById("chip-name-field").innerHTML = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].name;
+            let size = spi_flash_db[jedec_id[0]][jedec_id[1]][jedec_id[2]].size;
+            if (document.getElementById("upload_file").files.length === 0) {
+                alert("Please upload binary file");
+                device_busy = false;
+                document.getElementById("write-progress-indicator").style.width = '0%';
+                return;
+            }
+            let file = document.getElementById("upload_file").files[0];
+            if (file.size > size) {
+                alert("Uploaded file is too big");
+                device_busy = false;
+                document.getElementById("write-progress-indicator").style.width = '0%';
+                return;
+            }
+            if (file.size < size) { } //TODO
+            let bytes = await file.bytes();
+
+            await writeSPI([6]);
+            await writeSPI([96]);
+            const delay = (delayInms) => {
+                return new Promise(resolve => setTimeout(resolve, delayInms));
+            };
+            for (let i = 0; i < 10; i++) {
+                await writeSPI([5]);
+                await delay(3000);
+            }
+
+            for (let i = 0; i < size / 4096; i++) {
+                if (!device_busy) {
+                    console.log("Writing canceled");
+                    document.getElementById("write-progress-indicator").style.width = '0%';
+                    device_busy = false;
+                    return;
+                }
+                let offset = i * 4096;
+
+                try {
+                    for (let a = 0; a < 4096 / 256; a++) {
+                        await writeSPI([6]);
+                        await writeSPI([2, ((offset + a * 256) >> 16) & 0xFF, ((offset + a * 256) >> 8) & 0xFF, (offset + a * 256) & 0xFF, ...bytes.slice(offset + a * 256, offset + 256 + a * 256)]);
+                    }
+                } catch (error) {
+                    console.log('Connection error:', error);
+                    i--;
+                }
+                console.log(i);
+                if (i % Math.floor(size / 4096 / 99) == 0) {
+                    document.getElementById("write-progress-indicator").style.width = `${1 + Math.floor(i / (size / 4096 / 99))}%`;
+                }
+            }
+            document.getElementById("write-progress-indicator").style.width = '0%';
+            document.getElementById("upload_file").value = "";
+            device_busy = false;
+            alert("Ready!");
+        }
+
+
+        document.getElementById("cancel_writing_memory").onclick = () => {
+            device_busy = false;
+        };
+
+        document.getElementById("upload_file").onchange = () => {
+            if (document.getElementById("upload_file").files.length > 0) {
+                document.getElementById("upload_file_label").style.backgroundColor = "green";
+                document.getElementById("upload_file_label").innerHTML = `&#10003; ${document.getElementById("upload_file").files[0].name}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

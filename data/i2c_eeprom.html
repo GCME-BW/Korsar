@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>I2C EEPROM</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin: 0px auto 35px;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+        }
+
+        .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+
+        .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+        }
+
+        .tg th,
+        .tg td {
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top
+        }
+
+        .progressbar-container {
+            min-width: 180px;
+            width: calc(70vw + 60px);
+            max-width: 360px;
+            color: #000;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            box-sizing: inherit;
+            margin: 0px auto 35px;
+        }
+
+        .progressbar-indicator {
+            color: white;
+            background-color: #3498db;
+            padding: 13px 0;
+            border-radius: 8px;
+            box-sizing: inherit;
+        }
+
+        .output-console {
+            min-width: 200px;
+            width: 80vw;
+            max-width: 95vw;
+            height: 500px;
+            font-size: 18px
+        }
+
+        .text-input {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .number-input {
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>I2C EEPROM reader</h1>
+    <a class="button button-on" href="/">Back</a>
+    <input type="number" class="text-input number-input" id="eeprom_address" placeholder="Address of EEPROM device"
+        min="1" max="127" step="1">
+    <input type="number" class="text-input number-input" id="eeprom_size" placeholder="Size of EEPROM in bytes" min="1"
+        max="1048576" step="1">
+    <a class="button button-on" id="read_memory">Read memory</a>
+    <div class="progressbar-container">
+        <div class="progressbar-indicator" style="width:0%" id="read-progress-indicator"></div>
+    </div>
+    <a class="button button-on" id="cancel_reading_memory">Cancel reading</a>
+    <hr style="min-width: 172px;width: calc(70vw + 52px);max-width: 352px;margin-bottom:35px;border-color:gray;" />
+    <label class="button button-on" for="upload_file" id="upload_file_label">Select file to write</label>
+    <input type="file" id="upload_file" style="display: none;" />
+    <a class="button button-on" id="write_memory">Write memory</a>
+    <div class="progressbar-container">
+        <div class="progressbar-indicator" style="width:0%" id="write-progress-indicator"></div>
+    </div>
+    <a class="button button-on" id="cancel_writing_memory">Cancel writing</a>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/i2c.js"></script>
+    <script>
+        window.addEventListener('load', onload);
+        document.getElementById("upload_file").value = "";
+        let device_busy = false;
+
+        function onload(event) {
+            initI2C();
+        }
+
+        function resetProgressIndicator(id) {
+            document.getElementById(id).style.width = '0%';
+            document.getElementById(id).style.backgroundColor = "#3498db";
+        }
+        
+        function getDeviceParams(){
+            let address = getInputInt16Value("eeprom_address");
+            let size = getInputNumber("eeprom_size");
+            if (!validateNumber(address, 0, 127)) {
+                alert("Please enter correct device address\r\n");
+                return [null, null];
+            }
+            if (!validateNumber(size, 0, 1048576) || size % 32 != 0) {
+                alert("Please enter correct device size\r\n");
+                return [null, null];
+            }
+            return [address, size];
+        }
+
+        document.getElementById("read_memory").onclick = async () => {
+            if (device_busy) return;
+            let [address, size] = getDeviceParams();
+            if(address === null || size === null) return;
+            resetProgressIndicator("read-progress-indicator");
+            try {
+                if (!(await probeI2C(address, 100000))) {
+                    alert("No device on address");
+                    return;
+                }
+            } catch (error) {
+                alert("Network error");
+                console.log(error);
+                return;
+            }
+            device_busy = true;
+            document.getElementById("read-progress-indicator").style.width = '1%';
+
+            let batch_size = size > 2048 ? 128 : 32;
+
+            let arr = [];
+            for (let i = 0; i < size / batch_size; i++) {
+                if (!device_busy) {
+                    console.log("Reading canceled");
+                    resetProgressIndicator("read-progress-indicator");
+                    device_busy = false;
+                    return;
+                }
+                let offset = i * batch_size;
+
+                try {
+                    let response = await readI2C(address, size > 2048 ? [(i * batch_size) >> 8, (i * batch_size) & 0xFF] : [i * batch_size], batch_size, 100000);
+                    if (response.error == "NO_ACKNOWLEDGE_ADDRESS") {
+                        alert("Device was disconnected");
+                        resetProgressIndicator("read-progress-indicator");
+                        device_busy = false;
+                        return;
+                    }
+                    else if (response.error != "SUCCESS" || response.read.length < batch_size) {
+                        alert("Unknown error");
+                        resetProgressIndicator("read-progress-indicator");
+                        device_busy = false;
+                        return;
+                    }
+                    else {
+                        arr.push(...response.read);
+                    }
+                } catch (error) {
+                    alert("Network error");
+                    console.log(error);
+                    resetProgressIndicator("read-progress-indicator");
+                    device_busy = false;
+                    return;
+                }
+                console.log(i);
+                if (i % Math.floor(size / batch_size / 99) == 0) {
+                    document.getElementById("read-progress-indicator").style.width = `${1 + Math.floor(i / (size / batch_size / 99))}%`;
+                }
+            }
+            document.getElementById("read-progress-indicator").style.backgroundColor = "green";
+            download([new Uint8Array(arr)], "test.bin");
+            device_busy = false;
+        }
+
+        document.getElementById("cancel_reading_memory").onclick = () => {
+            device_busy = false;
+        };
+
+        document.getElementById("write_memory").onclick = async () => {
+            if (device_busy) return;
+            let [address, size] = getDeviceParams();
+            if(address === null || size === null) return;
+            resetProgressIndicator("write-progress-indicator");
+            if (document.getElementById("upload_file").files.length === 0) {
+                alert("Please upload binary file");
+                return;
+            }
+            let file = document.getElementById("upload_file").files[0];
+            if (file.size > size) {
+                alert("Uploaded file is too big");
+                return;
+            }
+            if (file.size < size) { } //TODO
+            let bytes = await file.bytes();
+            console.log(bytes);
+            device_busy = true;
+            let batch_size = 64;//TODO
+            for (let i = 0; i < Math.ceil(file.size / batch_size); i++) {
+                if (!device_busy) {
+                    console.log("Writing canceled");
+                    resetProgressIndicator("write-progress-indicator");
+                    device_busy = false;
+                    return;
+                }
+                try {
+                    console.log([...size > 2048 ? [(i * batch_size) >> 8, (i * batch_size) & 0xFF] : [i * batch_size], ...bytes.slice(i * batch_size, i * batch_size + batch_size)]);
+                    let response = await writeI2C(address, [...size > 2048 ? [(i * batch_size) >> 8, (i * batch_size) & 0xFF] : [i * batch_size], ...bytes.slice(i * batch_size, i * batch_size + batch_size)], 100000);
+                    if (response == "NO_ACKNOWLEDGE_ADDRESS") {
+                        alert("Device was disconnected");
+                        resetProgressIndicator("write-progress-indicator");
+                        device_busy = false;
+                        return;
+                    }
+                    else if (response != "SUCCESS") {
+                        alert("Unknown error");
+                        resetProgressIndicator("write-progress-indicator");
+                        device_busy = false;
+                        return;
+                    }
+                } catch (error) {
+                    alert("Network error");
+                    console.log(error);
+                    resetProgressIndicator("write-progress-indicator");
+                    device_busy = false;
+                    return;
+                }
+                if (i % Math.floor(file.size / batch_size / 99) == 0) {
+                    document.getElementById("write-progress-indicator").style.width = `${1 + Math.floor(i / (file.size / batch_size / 99))}%`;
+                }
+            }
+            resetProgressIndicator("write-progress-indicator");
+            document.getElementById("upload_file").value = "";
+            device_busy = false;
+        }
+
+        document.getElementById("cancel_writing_memory").onclick = () => {
+            device_busy = false;
+        };
+
+        document.getElementById("upload_file").onchange = () => {
+            if (document.getElementById("upload_file").files.length > 0) {
+                document.getElementById("upload_file_label").style.backgroundColor = "green";
+                document.getElementById("upload_file_label").innerHTML = `&#10003; ${document.getElementById("upload_file").files[0].name}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

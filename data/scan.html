@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>I2C Scan</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .output-console {
+            min-width: 200px;
+            width: 80vw;
+            max-width: 95vw;
+            height: 500px;
+            font-size: 18px
+        }
+    </style>
+</head>
+
+<body>
+    <h1>I2C Scan</h1>
+    <a class="button button-on" href="/">Back</a>
+    <a class="button button-on" id="scan_btn">Scan</a>
+    <textarea id="output" class="output-console" readonly></textarea>
+    <script src="/js/chipdb.js"></script>
+    <script src="/js/lib/i2c_addr_db.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/i2c.js"></script>
+    <script>
+        document.getElementById("scan_btn").onclick = async () => {
+            printText("Scanning started...\r\n");
+            let devices = await scanI2C();
+            for (let i = 0; i < devices.length; i++) {
+                printText(`Found device on ${stringToHex(devices[i])}\r\n`);
+                if (devices[i] in db && db[devices[i]].length > 0) {
+                    printText(`Probably this device is one from following list: ${db[devices[i]]}\r\n`);
+                }
+            }
+            if (devices.length === 0) {
+                printText("No devices found\r\n");
+            }
+            printText("Finish!\r\n");
+        };
+    </script>
+</body>
+
+</html>
