@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SPI Terminal</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 25px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-button {
+            display: block;
+            width: calc(100% - 60px);
+            ;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .text-input {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-text-input {
+            display: block;
+            width: calc(100% - 60px);
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-select {
+            display: block;
+            width: 100%;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            cursor: pointer;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .button-on {
+            background-color: #3498db;
+        }
+
+        .button-on:active {
+            background-color: #2980b9;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .output-console {
+            min-width: 200px;
+            width: 80vw;
+            max-width: 95vw;
+            height: 500px;
+            font-size: 18px
+        }
+
+        .span-bottom {
+            margin-bottom: 35px;
+        }
+
+        .fb-element {
+            padding: 15px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 645px) {
+            .fb-element {
+                width: 90%;
+            }
+        }
+
+        @media (min-width: 645px) and (max-width: 984px) {
+            .fb-element {
+                width: 45%;
+            }
+        }
+
+        @media (min-width: 985px) {
+            .fb-element {
+                width: 29%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SPI Terminal</h1>
+    <a class="button button-on" href="/">Back</a>
+    <div style="display: flex;justify-content: space-around;flex-wrap: wrap;">
+        <div class="fb-element">
+            <input class="inflex-text-input" id="spi_frequency_input" placeholder="Frequency" value="2000000">
+            <select class="inflex-select span-bottom" name="Bit order" id="spi_order_input">
+                <option value="0">LSB</option>
+                <option value="1" selected>MSB</option>
+            </select>
+            <select class="inflex-select" name="Mode" id="spi_mode_input">
+                <option value="0" selected>SPI Mode 0</option>
+                <option value="1">SPI Mode 1</option>
+                <option value="2">SPI Mode 2</option>
+                <option value="3">SPI Mode 3</option>
+            </select>
+        </div>
+        <div class="fb-element">
+            <input class="inflex-text-input" id="write_input" placeholder="Value as hex number(s)">
+            <a class="inflex-button button-on" id="write_btn">Write</a>
+        </div>
+        <div class="fb-element">
+            <input class="inflex-text-input" id="write_read_input" placeholder="Value as hex number(s)">
+            <input class="inflex-text-input" id="bytes_number_input" placeholder="Number of bytes">
+            <input class="inflex-text-input" id="placeholder_byte_input" placeholder="Placeholder byte">
+            <a class="inflex-button button-on" id="write_read_btn">Write&Read</a>
+        </div>
+    </div>
+    <h3>Console</h3>
+    <textarea id="output" class="output-console" readonly></textarea>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/ws.js"></script>
+    <script src="/js/lib/spi.js"></script>
+    <script>
+        window.addEventListener('load', onload);
+        let firstConnection = true;
+
+        function onload(event) {
+            initSPI(() => {
+                if (firstConnection) {
+                    firstConnection = false;
+                    printText("Connected to device\r\n");
+                }
+                else {
+                    printText("Reconnected to device\r\n");
+                }
+            });
+        }
+
+        document.getElementById("write_btn").onclick = async () => {
+            let bytes = getInputInt16ArrayValue("write_input");
+            let frequency = parseInt(getInputValue("spi_frequency_input"));
+            let order = parseInt(getInputValue("spi_order_input"));
+            let mode = parseInt(getInputValue("spi_mode_input"));
+            if (!validateBytearray(bytes)) {
+                printText("Please enter correct data to write\r\n");
+                return;
+            }
+            printText("Sent byte(s):\r\n");
+            printText(`${bytes.map((byte) => stringToHex(byte))}\r\n`);
+            writeSPI(bytes, frequency, order, mode)
+                .then((error) => {
+                    if (getSPIErrorText(error)) {
+                        printText(`${getSPIErrorText(error)}\r\n`)
+                    }
+                })
+                .catch(() => { printText("Network error\r\n") });
+        }
+
+        document.getElementById("write_read_btn").onclick = async () => {
+            let bytes = getInputInt16ArrayValue("write_read_input");
+            let byte_quantity = parseInt(getInputValue("bytes_number_input"));
+            let placeholder_byte = getInputInt16Value("placeholder_byte_input");
+            let frequency = parseInt(getInputValue("spi_frequency_input"));
+            let order = parseInt(getInputValue("spi_order_input"));
+            let mode = parseInt(getInputValue("spi_mode_input"));
+            if (!validateNumber(frequency, 100000, 25000000)) {
+                printText("Please enter correct frequency\r\n");
+                return;
+            }
+            if (!validateBytearray(bytes)) {
+                printText("Please enter correct data to write\r\n");
+                return;
+            }
+            if (!validateNumber(byte_quantity, 0, 1023)) {
+                printText("Please enter correct byte quantity\r\n");
+                return;
+            }
+            if (!validateNumber(placeholder_byte, 0, 255)) {
+                printText("Please enter correct placeholder byte\r\n");
+                return;
+            }
+            printText("Sent byte(s):\r\n");
+            printText(`${bytes.map((byte) => stringToHex(byte))}\r\n`);
+            writeReadSPI(bytes, byte_quantity, placeholder_byte, frequency, order, mode)
+                .then((response) => {
+                    if (getSPIErrorText(response.error)) {
+                        printText(`${getSPIErrorText(response.error)}\r\n`)
+                    }
+                    else {
+                        printText(`Read following ${byte_quantity} bytes using placeholder ${placeholder_byte}\r\n`);
+                        printText(`${response.read}\r\n`);
+                    }
+                })
+                .catch(() => { printText("Network error\r\n") });
+        }
+    </script>
+</body>
+
+</html>

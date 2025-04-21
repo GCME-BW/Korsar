@@ -1,0 +1,3 @@
+WifiSettings.mdns_domain max_size:64
+WifiSettings.softap_ssid max_size:64
+WifiSettings.softap_password max_size:64

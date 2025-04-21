@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>I2C Terminal</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 25px;
+        }
+
+        .button {
+            display: block;
+            min-width: 120px;
+            width: 70vw;
+            max-width: 300px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-button {
+            display: block;
+            width: calc(100% - 60px);
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-text-input {
+            display: block;
+            width: calc(100% - 60px);
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .inflex-select {
+            display: block;
+            width: 100%;
+            border: solid 1px gray;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            cursor: pointer;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .button:active {
+            background-color: #2980b9;
+        }
+
+        .fb-element {
+            padding: 15px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+
+        .span-bottom {
+            margin-bottom: 35px;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .output-console {
+            min-width: 200px;
+            width: 80vw;
+            max-width: 95vw;
+            height: 500px;
+            font-size: 18px
+        }
+
+        @media (max-width: 645px) {
+            .fb-element {
+                width: 90%;
+            }
+        }
+
+        @media (min-width: 645px) and (max-width: 984px) {
+            .fb-element {
+                width: 45%;
+            }
+        }
+
+        @media (min-width: 985px) {
+            .fb-element {
+                width: 29%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>I2C Terminal</h1>
+    <a class="button" href="/">Back</a>
+    <div style="display: flex;justify-content: space-around;flex-wrap: wrap;">
+        <div class="fb-element">
+            <select class="inflex-select span-bottom" name="Clock Frequency" id="speed_selector">
+                <option value="100000">100000 Hz</option>
+                <option value="400000">400000 Hz</option>
+            </select>
+            <input class="inflex-text-input" id="address_input" placeholder="Device address" list="devices">
+            <datalist id="devices">
+            </datalist>
+            <a class="inflex-button span-bottom" id="probe_btn">Probe</a>
+            <a class="inflex-button" id="scan_btn">Scan</a>
+        </div>
+        <div class="fb-element">
+            <input class="inflex-text-input" id="register_input_read" placeholder="Register address">
+            <input class="inflex-text-input" id="number_input" placeholder="Byte number">
+            <a class="inflex-button" id="read_btn">Read</a>
+        </div>
+        <div class="fb-element">
+            <input class="inflex-text-input" id="register_input_write" placeholder="Register address (optional)">
+            <input class="inflex-text-input" id="write_input" placeholder="Value as hex number(s)">
+            <a class="inflex-button" id="write_btn">Write</a>
+        </div>
+    </div>
+    <h3>Console</h3>
+    <textarea id="output" class="output-console" readonly></textarea>
+    <script src="/js/protobuf.min.js"></script>
+    <script src="/js/lib/i2c_addr_db.js"></script>
+    <script src="/js/lib/utils.js"></script>
+    <script src="/js/lib/pb.js"></script>
+    <script src="/js/lib/i2c.js"></script>
+    <script>
+        initI2C();
+        document.getElementById("scan_btn").onclick = async () => {
+            let speed = getInputNumber("speed_selector");
+            printText(`Scanning started on frequency ${speed} Hz...\r\n`);
+            document.getElementById("devices").innerHTML = "";
+            scanI2C()
+                .then((devices) => {
+                    if (devices.length === 0) {
+                        printText("No devices found\r\n");
+                    }
+                    else {
+                        for (let i = 0; i < devices.length; i++) {
+                            printText(`Found device on ${stringToHex(devices[i])}\r\n`);
+                            elementTextAppend("devices", `<option value=\"${stringToHex(devices[i])}\">`);
+                            if (devices[i] in db && db[devices[i]].length > 0) {
+                                printText(`Probably this device is one from following list: ${db[devices[i]]}\r\n`);
+                            }
+                        }
+                    }
+                    printText("Finish!\r\n");
+                })
+                .catch(() => {
+                    printText("Network error!\r\n");
+                });
+        };
+        document.getElementById("probe_btn").onclick = async () => {
+            let address = getInputInt16Value("address_input");
+            if (!validateNumber(address, 0, 127)) {
+                printText("Please enter correct device address\r\n");
+                return;
+            }
+            let speed = getInputNumber("speed_selector");
+            probeI2C(address, speed)
+                .then((response) => { printText(response ? "Address exists\r\n" : "No device\r\n"); })
+                .catch(() => { printText("Network error!\r\n") });
+        }
+
+        document.getElementById("read_btn").onclick = async () => {
+            let address = getInputInt16Value("address_input");
+            let register = getInputInt16ArrayValue("register_input_read");
+            let byte_quantity = getInputNumber("number_input");
+            let speed = getInputNumber("speed_selector");
+            if (!validateNumber(address, 0, 127)) {
+                printText("Please enter correct device address\r\n");
+                return;
+            }
+            if (!validateBytearray(register)) {
+                printText("Please enter correct register number\r\n");
+                return;
+            }
+            if (!validateNumber(byte_quantity, 0, 255)) {
+                printText("Please enter correct number of bytes to read\r\n");
+                return;
+            }
+            printText(`Requested ${byte_quantity} bytes on ${speed} Hz from ${register.map((byte) => stringToHex(byte))} register of ${stringToHex(address)} device\r\n`);
+
+            readI2C(address, register, byte_quantity, speed)
+                .then((response) => {
+                    if (getI2CErrorText(response.error)) {
+                        printText(`${getI2CErrorText(response.error)}\r\n`)
+                    }
+                    else {
+                        if (response.read.length < byte_quantity) {
+                            printText(`Got less bytes from device than expected; probably answer from device is not correct; here are bytes from device: ${(response.read).map((byte) => stringToHex(byte))}\r\n`);
+                        }
+                        else {
+                            printText(`Got following bytes from device: ${(response.read).map((byte) => stringToHex(byte))}\r\n`);
+                        }
+                    }
+                })
+                .catch(() => { printText("Network error!\r\n"); });
+        }
+        document.getElementById("write_btn").onclick = async () => {
+            let address = getInputInt16Value("address_input");
+            let bytes = getInputInt16ArrayValue("write_input");
+            let register = getInputInt16Value("register_input_write");
+            let speed = getInputNumber("speed_selector");
+            if (!validateNumber(address, 0, 127)) {
+                printText("Please enter correct device address\r\n");
+                return;
+            }
+            if (!validateBytearray(bytes)) {
+                printText("Please enter correct data to write\r\n");
+                return;
+            }
+            if (!isNaN(register)) {
+                if (validateNumber(register, 0, 255)) {
+                    printText("Please enter correct register address or no address\r\n");
+                    return;
+                }
+                bytes = [register, ...bytes];
+            }
+            printText(`Written ${bytes.map((byte) => stringToHex(byte))} on ${stringToHex(address)} device on ${speed} Hz\r\n`);
+            writeI2C(address, bytes, speed)
+                .then((error) => {
+                    if (getI2CErrorText(error)) {
+                        printText(`${getI2CErrorText(error)}\r\n`)
+                    }
+                })
+                .catch(() => { printText("Network error!\r\n") });
+        }
+    </script>
+</body>
+
+</html>

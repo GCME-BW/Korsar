@@ -1,0 +1,2 @@
+I2CReadWriteRequest.write max_size:4096
+I2CReadWriteResponse.read max_size:4096

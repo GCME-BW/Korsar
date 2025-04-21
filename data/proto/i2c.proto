@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+enum I2CError {
+    SUCCESS = 0;
+    INCORRECT_INPUT = 1;
+    BUS_ERROR = 2;
+    ARBITRATION_LOSS = 3;
+    NO_ACKNOWLEDGE_ADDRESS = 4;
+    NO_ACKNOWLEDGE_DATA = 5;
+    NO_ACKNOWLEDGE_UNKNOWN = 6;
+    TIMEOUT = 7;
+    UNKNOWN = 8;
+}
+
+message I2CReadWriteRequest {
+    uint32 address = 1;
+    uint32 frequency = 2;
+    uint32 byte_number = 3;
+    bytes write = 4;
+}
+
+message I2CReadWriteResponse {
+    I2CError error = 1;
+    bytes read = 2;
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+enum WifiMode {
+    STA = 0;
+    SoftAP = 1;
+}
+
+message WifiSettings {
+    WifiMode mode = 1;
+    string mdns_domain = 2;
+    string softap_ssid = 3;
+    string softap_password = 4;
+}

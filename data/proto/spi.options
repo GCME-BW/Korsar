@@ -1,0 +1,2 @@
+SPIReadWriteRequest.write max_size:4096
+SPIReadWriteResponse.read max_size:4096

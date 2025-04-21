@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+enum BitOrder {
+    LSB = 0;
+    MSB = 1;
+}
+
+enum Mode {
+    MODE_0 = 0;
+    MODE_1 = 1;
+    MODE_2 = 2;
+    MODE_3 = 3;
+}
+
+enum SPIError {
+    SUCCESS = 0;
+    INCORRECT_INPUT = 1;
+    FRAME_FORMAT = 2;
+    UNKNOWN = 3;
+}
+
+message SPIReadWriteRequest {
+    bytes write = 1;
+    uint32 rn_bytes = 2;
+    uint32 rw_byte = 3;
+    uint32 speed = 4;
+    BitOrder bit_order = 5;
+    Mode mode = 6;
+    bool no_answer = 7;
+}
+
+message SPIReadWriteResponse {
+    SPIError error = 1;
+    bytes read = 2;
+}
