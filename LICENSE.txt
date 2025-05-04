@@ -1,0 +1,3 @@
+Firmware part of project distributed under the GPL-2.0 License, according to licensing conditions of libraries, that are used. See `GPL-2.0-LICENSE.txt` for more information.
+
+Web pages and any other non-firmware parts of project distributed under the MIT License. See `MIT-LICENSE.txt` for more information.
