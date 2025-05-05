@@ -75,7 +75,7 @@ Interface works directly in browser, so you don't even need to install additiona
 
 At first, you need to have ESP32 board as platform. For now pre-built binaries available only generic ESP32, but firmware is also builtable for other kinds of ESP (ESP32S2, ESP32C3, etc).\
 For firmware installation you need PC with installed `esptool`.\
-For usage in normal mode, you need WiFi network and any client device with browser in this network.\
+For usage of already flashed device  in normal mode, you need WiFi network and any client device with browser in this network.\
 For usage of already flashed device with SoftAP mode, you need only WiFi-connectable device with browser (any modern computer or smartphone).
 
 ### Installation
@@ -86,14 +86,54 @@ For usage of already flashed device with SoftAP mode, you need only WiFi-connect
 
 ### Initial configuration
 
-TODO
+Connect flashed board to power supply and open WiFi list on your pc/smartphone:
+
+![WiFi list in Ubuntu](img/screenshot_wifi_list.png)
+
+> If you already configured your device and want to change connection settings, [go to this section](#resetting-connection-settings)
+
+Find AP of your board and connect. It has standard name for new ESP device, like `ESP32_<chip_id>`.\
+Then open `192.168.0.1` (throught captive portal or manually) in your browser.\
+You will see WiFi Manager page:
+
+![WiFi Manager screenshot](img/screenshot_wifi_manager_index.png)
+
+Now you have two options:
+1. [Connect Korsar to existing WiFi network](#connecting-to-existing-wlan)
+2. [Setup standalone access point (SoftAP)](#setting-standalone-wlan-softap-up)
+
+#### Connecting to existing WLAN
+
+Press button `Configure WiFi` on WiFi Manager page. Then choose your network, enter password and connect:
+
+![WiFi Manager network list](img/screenshot_wifi_manager_credentials.png)
+
+Device will reboot and connect to your WLAN. Wait a bit, until if will be ready, and then try to access `http://esp32dev.local` in browser.\
+
+If you can see menu page, you finished initial setup successfully.
+
+Troubleshooting:
+1. If Korsar can not connect to network (you entered wrong SSID/password, etc), Korsar will return to configuration mode after 20 seconds timeout. Try again with correct credentials.
+2. If Korsar connected to network, but you can not reach it's web page, try to open page directly by IP address (obtain this address from router settings, network scanner, etc.). If you can reach Korsar web interface throught IP address, but not throught mDNS domain, it means that mDNS is not supported by your client device (pc/smartphone). In this case, search guide for mDNS setup for your OS, or access Korsar directly by IP.
+3. If ypu can not reach Korsar web interface throught mDNS domain nor IP, but its connected to your WLAN, it means that your WLAN blocks direct connections between hosts in network. Usually you can meet this problem in correctly secured public networks. In this case, this WLAN is not suitable for Korsar, and you have to use it throught [standalone WLAN (SoftAP)](#setting-standalone-wlan-softap-up).
+
+#### Setting standalone WLAN (SoftAP) up
+
+Press button `Setup` on WiFi Manager page. Then set checkbox to `Host standalone WiFi network` and enter SSID and password of standalone network you want to create and save settings:
+
+![WiFi Manager SoftAP setup screenshot](img/screenshot_wifi_manager_settings.png)
+
+Now you can connect to this WiFi access point and open Korsar's web interface on `http://192.168.0.1` or `http://esp32dev.local`.
+
+#### Resetting connection settings
+
+Press `Boot` (may have other name) button on your board and hold one second to remove connection settings.\
+Then [configure device again](#initial-configuration).
 
 ### Building
 
 If you just want to use this tool, you don't need to build it, just install from binary.\
-If you want to develop or debug, launch your favorite IDE ith Platformio and perform following actions:
-
-> Exact way to do following actions may depend on which IDE are you using as host for PlatformIO.
+If you want to develop or debug, launch your favorite IDE ith PlatformIO and perform following actions (exact way may depend on which IDE are you using as host for PlatformIO):
 
 1. Clone the repo
    ```sh
@@ -139,7 +179,7 @@ With this tool you can interact with SPI slave devices. Following interface sett
 
 To write some value, simply enter bytes to write, separated with spaces.
 
-`Write&Read` could be used to read value from register or to do some action, specific for target device: firstly it sends some bytes to device, than reads expected number of bytes from it. Enter bytes to send separated with space, number of expected bytes of response and `placeholder byte` (byte, that should be sent each time to request next byte of answer usually its 0x00, or sometimes 0xFF; it depends on your target device).
+`Write&Read` could be used to read value from register or to do some action, specific for target device: firstly it sends some bytes to device, then reads expected number of bytes from it. Enter bytes to send separated with space, number of expected bytes of response and `placeholder byte` (byte, that should be sent each time to request next byte of answer usually its 0x00, or sometimes 0xFF; it depends on your target device).
 
 ### Pinout
 
