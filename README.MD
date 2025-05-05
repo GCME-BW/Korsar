@@ -2,7 +2,6 @@
 
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![Unlicense License][license-shield]][license-url]
 
 
 
@@ -238,5 +237,3 @@ Project Link: [https://github.com/GCME-BW/Korsar](https://github.com/GCME-BW/Kor
 [stars-url]: https://github.com/GCME-BW/Korsar/stargazers
 [issues-shield]: https://img.shields.io/github/issues/GCME-BW/Korsar.svg?style=for-the-badge
 [issues-url]: https://github.com/GCME-BW/Korsar/issues
-[license-shield]: https://img.shields.io/github/license/GCME-BW/Korsar.svg?style=for-the-badge
-[license-url]: https://github.com/GCME-BW/Korsar/blob/master/LICENSE.txt
