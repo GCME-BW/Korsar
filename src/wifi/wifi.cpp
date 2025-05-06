@@ -43,7 +43,7 @@ void saveConfigCallback()
     getParam("soft_ap_pwd").toCharArray(data.softap_password, 64);
     pb_encode(&stream, WifiSettings_fields, &data);
 
-    File file = LittleFS.open("/wifi_config.bin", FILE_WRITE);
+    File file = SPIFFS.open("/wifi_config.bin", FILE_WRITE);
     if (!file)
     {
         Serial.println("- failed to open file for writing");
@@ -66,7 +66,7 @@ void saveConfigCallback()
 
 void loadSettings()
 {
-    File file = LittleFS.open("/wifi_config.bin");
+    File file = SPIFFS.open("/wifi_config.bin");
     if (!file || file.isDirectory())
     {
         Serial.println("No saved configs file");
@@ -187,7 +187,7 @@ void checkButton()
             if (buttonState == LOW)
             {
                 wm.resetSettings();
-                LittleFS.remove("/wifi_config.bin");
+                SPIFFS.remove("/wifi_config.bin");
                 ESP.restart();
             }
         }

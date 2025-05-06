@@ -83,6 +83,39 @@
             border-radius: 4px;
         }
 
+        .inflex-text-input-box {
+            border: solid 1px gray;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: row;
+            padding: 0 !important;
+            width: calc(100%);
+        }
+
+        .inflex-text-subinput {
+            min-width: 0;
+            text-decoration: none;
+            font-size: 25px;
+            cursor: pointer;
+            border: none;
+            height: 100%;
+            width: 100%;
+            padding: 13px 30px;
+            border-radius: 4px;
+        }
+
+        .inflex-input-unit {
+            margin-left: 5px;
+            font-size: 16px;
+            padding-right: 10px;
+            padding-top: 10px;
+            color: black;
+        }
+
         .inflex-select {
             display: block;
             width: 100%;
@@ -153,7 +186,12 @@
     <a class="button button-on" href="/">Back</a>
     <div style="display: flex;justify-content: space-around;flex-wrap: wrap;">
         <div class="fb-element">
-            <input class="inflex-text-input" id="spi_frequency_input" placeholder="Frequency" value="2000000">
+            <div class="inflex-text-input-box">
+                <input class="inflex-text-subinput" placeholder="Frequency" id="spi_frequency_input" value="2000000">
+                <div class="inflex-input-unit">
+                    Dec
+                </div>
+            </div>
             <select class="inflex-select span-bottom" name="Bit order" id="spi_order_input">
                 <option value="0">LSB</option>
                 <option value="1" selected>MSB</option>
@@ -166,13 +204,33 @@
             </select>
         </div>
         <div class="fb-element">
-            <input class="inflex-text-input" id="write_input" placeholder="Value as hex number(s)">
+            <div class="inflex-text-input-box">
+                <input class="inflex-text-subinput" placeholder="Value as hex number(s)" id="write_input">
+                <div class="inflex-input-unit">
+                    [Hex]
+                </div>
+            </div>
             <a class="inflex-button button-on" id="write_btn">Write</a>
         </div>
         <div class="fb-element">
-            <input class="inflex-text-input" id="write_read_input" placeholder="Value as hex number(s)">
-            <input class="inflex-text-input" id="bytes_number_input" placeholder="Number of bytes">
-            <input class="inflex-text-input" id="placeholder_byte_input" placeholder="Placeholder byte">
+            <div class="inflex-text-input-box">
+                <input class="inflex-text-subinput" placeholder="Value as hex number(s)" id="write_read_input">
+                <div class="inflex-input-unit">
+                    [Hex]
+                </div>
+            </div>
+            <div class="inflex-text-input-box">
+                <input class="inflex-text-subinput" placeholder="Number of bytes" id="bytes_number_input">
+                <div class="inflex-input-unit">
+                    Dec
+                </div>
+            </div>
+            <div class="inflex-text-input-box">
+                <input class="inflex-text-subinput" placeholder="Placeholder byte" id="bytes_number_input">
+                <div class="inflex-input-unit">
+                    Dec
+                </div>
+            </div>
             <a class="inflex-button button-on" id="write_read_btn">Write&Read</a>
         </div>
     </div>

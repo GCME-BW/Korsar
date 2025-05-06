@@ -4,7 +4,7 @@
 #include <spi/spi_api.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "LittleFS.h"
+#include "SPIFFS.h"
 
 AsyncWebServer server(80);
 
@@ -15,11 +15,11 @@ void setup()
 
     Serial.println("\n Starting");
 
-    if (!LittleFS.begin(true))
+    if (!SPIFFS.begin(true))
     {
-        Serial.println("An error has occurred while mounting LittleFS");
+        Serial.println("An error has occurred while mounting SPIFFS");
     }
-    Serial.println("LittleFS mounted successfully");
+    Serial.println("SPIFFS mounted successfully");
 
     setupI2c();
     setupSpi();
