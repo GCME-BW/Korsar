@@ -33,6 +33,7 @@ void registerStaticFiles(AsyncWebServer &server)
     server.serveStatic("/js/lib/i2c.js", SPIFFS, "/lib/i2c.js");
     server.serveStatic("/js/lib/spi.js", SPIFFS, "/lib/spi.js");
     server.serveStatic("/js/protobuf.min.js", SPIFFS, "/protobuf.min.js");
+    server.serveStatic("/css/pico.min.css", SPIFFS, "/css/pico.min.css");
     server.serveStatic("/proto/i2c.proto", SPIFFS, "/proto/i2c.proto");
     server.serveStatic("/proto/spi.proto", SPIFFS, "/proto/spi.proto");
     server.onNotFound(handle_NotFound);

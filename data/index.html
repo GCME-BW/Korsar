@@ -4,74 +4,31 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Index</title>
-    <style>
-        html {
-            font-family: Helvetica;
-            display: inline-block;
-            margin: 0px auto;
-            text-align: center;
-        }
-
-        body {
-            margin-top: 50px;
-        }
-
-        h1 {
-            color: #444444;
-            margin: 50px auto 30px;
-        }
-
-        h3 {
-            color: #444444;
-            margin-bottom: 50px;
-        }
-
-        .button {
-            display: block;
-            min-width: 120px;
-            width: 70vw;
-            max-width: 300px;
-            background-color: #3498db;
-            border: none;
-            color: white;
-            padding: 13px 30px;
-            text-decoration: none;
-            font-size: 25px;
-            margin: 0px auto 35px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .button-on {
-            background-color: #3498db;
-        }
-
-        .button-on:active {
-            background-color: #2980b9;
-        }
-
-        p {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/pico.min.css">
 </head>
 
 <body>
-    <h1>Korsar</h1>
-    <!--<a class="button button-on" href="/i2c/scan">I2C Scan</a>-->
-    <a class="button button-on" href="/i2c/terminal">I2C Terminal</a>
-    <!-- <a class="button button-on" href="/i2c/eeprom">I2C EEPROM tool</a> -->
-    <!-- <a class="button button-on" href="/i2c/sh1106">SH1106 Tester</a> -->
-    <a class="button button-on" href="/spi/terminal">SPI Terminal</a>
-    <!-- <a class="button button-on" href="/">Servo</a> -->
-    <!-- <a class="button button-on" href="/">Voltage meter (ADC)</a> -->
-    <!-- <a class="button button-on" href="/">Voltage source (DAC)</a> -->
-    <!-- <a class="button button-on" href="/">PWM source</a> -->
-    <!-- <a class="button button-on" href="/spi/flash">SPI Flash tool</a> -->
-    <!-- <a class="button button-on" href="/spi/ws2812">WS2812 Tester</a> -->
-    <!--<a class="button button-on" href="/api_doc">API</a>-->
+    <header class="container">
+        <h1>Korsar</h1>
+    </header>
+    <main class="container">
+        <!--<a role="button" href="/i2c/scan">I2C Scan</a>-->
+        <form action="/i2c/terminal">
+            <button type="submit">I2C Terminal</button>
+        </form>
+        <!-- <a role="button" href="/i2c/eeprom">I2C EEPROM tool</a> -->
+        <!-- <a role="button" href="/i2c/sh1106">SH1106 Tester</a> -->
+        <form action="/spi/terminal">
+            <button type="submit">SPI Terminal</button>
+        </form>
+        <!-- <a role="button" href="/">Servo</a> -->
+        <!-- <a role="button" href="/">Voltage meter (ADC)</a> -->
+        <!-- <a role="button" href="/">Voltage source (DAC)</a> -->
+        <!-- <a role="button" href="/">PWM source</a> -->
+        <!-- <a role="button" href="/spi/flash">SPI Flash tool</a> -->
+        <!-- <a role="button" href="/spi/ws2812">WS2812 Tester</a> -->
+        <!--<a role="button" href="/api_doc">API</a>-->
+    </main>
 </body>
 
 </html>

@@ -4,219 +4,58 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>I2C Terminal</title>
-    <style>
-        html {
-            font-family: Helvetica;
-            display: inline-block;
-            margin: 0px auto;
-            text-align: center;
-        }
-
-        body {
-            margin-top: 50px;
-        }
-
-        h1 {
-            color: #444444;
-            margin: 50px auto 30px;
-        }
-
-        h3 {
-            color: #444444;
-            margin-bottom: 25px;
-        }
-
-        .button {
-            display: block;
-            min-width: 120px;
-            width: 70vw;
-            max-width: 300px;
-            background-color: #3498db;
-            border: none;
-            color: white;
-            padding: 13px 30px;
-            text-decoration: none;
-            font-size: 25px;
-            margin: 0px auto 35px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .inflex-button {
-            display: block;
-            width: calc(100% - 60px);
-            background-color: #3498db;
-            border: none;
-            color: white;
-            padding: 13px 30px;
-            text-decoration: none;
-            font-size: 25px;
-            margin: 0px auto 0;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .inflex-text-input {
-            display: block;
-            width: calc(100% - 60px);
-            border: solid 1px gray;
-            padding: 13px 30px;
-            text-decoration: none;
-            font-size: 25px;
-            margin: 0px auto 35px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .inflex-text-input-box {
-            border: solid 1px gray;
-            text-decoration: none;
-            font-size: 25px;
-            margin: 0px auto 35px;
-            cursor: pointer;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: row;
-            padding: 0 !important;
-            width: calc(100%);
-        }
-
-        .inflex-text-subinput {
-            min-width: 0;
-            text-decoration: none;
-            font-size: 25px;
-            cursor: pointer;
-            border: none;
-            height: 100%;
-            width: 100%;
-            padding: 13px 30px;
-            border-radius: 4px;
-        }
-
-        .inflex-input-unit {
-            margin-left: 5px;
-            font-size: 16px;
-            padding-right: 10px;
-            padding-top: 10px;
-            color: black;
-        }
-
-        .inflex-select {
-            display: block;
-            width: 100%;
-            border: solid 1px gray;
-            padding: 13px 30px;
-            text-decoration: none;
-            font-size: 25px;
-            cursor: pointer;
-            border-radius: 4px;
-            background-color: white;
-        }
-
-        .button:active {
-            background-color: #2980b9;
-        }
-
-        .fb-element {
-            padding: 15px;
-            border: 1px solid #3498db;
-            border-radius: 4px;
-            margin-bottom: 35px;
-        }
-
-        .span-bottom {
-            margin-bottom: 35px;
-        }
-
-        p {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 10px;
-        }
-
-        .output-console {
-            min-width: 200px;
-            width: 80vw;
-            max-width: 95vw;
-            height: 500px;
-            font-size: 18px
-        }
-
-        @media (max-width: 645px) {
-            .fb-element {
-                width: 90%;
-            }
-        }
-
-        @media (min-width: 645px) and (max-width: 984px) {
-            .fb-element {
-                width: 45%;
-            }
-        }
-
-        @media (min-width: 985px) {
-            .fb-element {
-                width: 29%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/pico.min.css">
 </head>
 
 <body>
-    <h1>I2C Terminal</h1>
-    <a class="button" href="/">Back</a>
-    <div style="display: flex;justify-content: space-around;flex-wrap: wrap;">
-        <div class="fb-element">
-            <select class="inflex-select span-bottom" name="Clock Frequency" id="speed_selector">
-                <option value="100000">100000 Hz</option>
-                <option value="400000">400000 Hz</option>
-            </select>
-            <div class="inflex-text-input-box">
-                <input class="inflex-text-subinput" placeholder="Device address" list="devices" id="address_input">
-                <div class="inflex-input-unit">
-                    Hex
-                </div>
-            </div>
-            <datalist id="devices">
-            </datalist>
-            <a class="inflex-button span-bottom" id="probe_btn">Probe</a>
-            <a class="inflex-button" id="scan_btn">Scan</a>
+    <header class="container">
+        <h1>I2C Terminal</h1>
+        <a role="button" href="/">Back</a>
+    </header>
+    <main class="container">
+        <div class="grid">
+            <article>
+                <select name="Clock Frequency" id="speed_selector">
+                    <option value="100000">100000 Hz</option>
+                    <option value="400000">400000 Hz</option>
+                </select>
+                <fieldset role="group">
+                    <input placeholder="Device address" list="devices" id="address_input">
+                    <datalist id="devices">
+                    </datalist>
+                    <input type="button" value="Hex" />
+                </fieldset>
+                <button id="probe_btn">Probe</button>
+                <button id="scan_btn">Scan</button>
+            </article>
+            <article>
+                <fieldset role="group">
+                    <input placeholder="Register address" id="register_input_read">
+                    <input type="button" value="Hex" />
+                </fieldset>
+                <fieldset role="group">
+                    <input placeholder="Byte number" id="number_input">
+                    <input type="button" value="Dec" />
+                </fieldset>
+                <button id="read_btn">Read</button>
+            </article>
+            <article>
+                <fieldset role="group">
+                    <input placeholder="Register address (optional)" id="register_input_write">
+                    <input type="button" value="Hex" />
+                </fieldset>
+                <fieldset role="group">
+                    <input placeholder="Value as hex number(s)" id="write_input">
+                    <input type="button" value="[Hex]" />
+                </fieldset>
+                <button id="write_btn">Write</button>
+            </article>
         </div>
-        <div class="fb-element">
-            <div class="inflex-text-input-box">
-                <input class="inflex-text-subinput" placeholder="Register address"
-                    id="register_input_read">
-                <div class="inflex-input-unit">
-                    Hex
-                </div>
-            </div>
-            <div class="inflex-text-input-box">
-                <input class="inflex-text-subinput" placeholder="Byte number" id="number_input">
-                <div class="inflex-input-unit">
-                    Dec
-                </div>
-            </div>
-            <a class="inflex-button" id="read_btn">Read</a>
-        </div>
-        <div class="fb-element">
-            <div class="inflex-text-input-box">
-                <input class="inflex-text-subinput" placeholder="Register address (optional)"
-                    id="register_input_write">
-                <div class="inflex-input-unit">
-                    Hex
-                </div>
-            </div>
-            <div class="inflex-text-input-box">
-                <input class="inflex-text-subinput" placeholder="Value as hex number(s)" id="write_input">
-                <div class="inflex-input-unit">
-                    [Hex]
-                </div>
-            </div>
-            <a class="inflex-button" id="write_btn">Write</a>
-        </div>
-    </div>
-    <h3>Console</h3>
-    <textarea id="output" class="output-console" readonly></textarea>
+    </main>
+    <footer class="container">
+        <h3>Console</h3>
+        <textarea id="output" name="read-only" readonly style="min-height: 500px;"></textarea>
+    </footer>
     <script src="/js/protobuf.min.js"></script>
     <script src="/js/lib/i2c_addr_db.js"></script>
     <script src="/js/lib/utils.js"></script>
