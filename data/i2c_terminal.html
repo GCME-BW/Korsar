@@ -61,13 +61,18 @@
     <script src="/js/lib/utils.js"></script>
     <script src="/js/lib/pb.js"></script>
     <script src="/js/lib/i2c.js"></script>
-    <script>
-        initI2C();
+    <script defer>
+        let bus;
+        window.addEventListener('load', async (event) => {
+            bus = await openI2CPromisified();
+            console.log('The page has fully loaded');
+        });
+
         document.getElementById("scan_btn").onclick = async () => {
             let speed = getInputNumber("speed_selector");
             printText(`Scanning started on frequency ${speed} Hz...\r\n`);
             document.getElementById("devices").innerHTML = "";
-            scanI2C()
+            bus.scan()
                 .then((devices) => {
                     if (devices.length === 0) {
                         printText("No devices found\r\n");
@@ -83,7 +88,8 @@
                     }
                     printText("Finish!\r\n");
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.log(err);
                     printText("Network error!\r\n");
                 });
         };
@@ -94,7 +100,7 @@
                 return;
             }
             let speed = getInputNumber("speed_selector");
-            probeI2C(address, speed)
+            bus.probe(address, speed)
                 .then((response) => { printText(response ? "Address exists\r\n" : "No device\r\n"); })
                 .catch(() => { printText("Network error!\r\n") });
         }
@@ -118,7 +124,7 @@
             }
             printText(`Requested ${byte_quantity} bytes on ${speed} Hz from ${register.map((byte) => stringToHex(byte))} register of ${stringToHex(address)} device\r\n`);
 
-            readI2C(address, register, byte_quantity, speed)
+            bus.i2cReadReg(address, register, byte_quantity, speed)
                 .then((response) => {
                     if (getI2CErrorText(response.error)) {
                         printText(`${getI2CErrorText(response.error)}\r\n`)
@@ -132,7 +138,10 @@
                         }
                     }
                 })
-                .catch(() => { printText("Network error!\r\n"); });
+                .catch((err) => {
+                    console.log(err);
+                    printText("Network error!\r\n");
+                });
         }
         document.getElementById("write_btn").onclick = async () => {
             let address = getInputInt16Value("address_input");
@@ -147,21 +156,22 @@
                 printText("Please enter correct data to write\r\n");
                 return;
             }
-            if (!isNaN(register)) {
-                if (validateNumber(register, 0, 255)) {
-                    printText("Please enter correct register address or no address\r\n");
-                    return;
-                }
-                bytes = [register, ...bytes];
+            if (!validateNumber(register, 0, 255)) {
+                printText("Please enter correct register address or no address\r\n");
+                return;
             }
             printText(`Written ${bytes.map((byte) => stringToHex(byte))} on ${stringToHex(address)} device on ${speed} Hz\r\n`);
-            writeI2C(address, bytes, speed)
-                .then((error) => {
-                    if (getI2CErrorText(error)) {
-                        printText(`${getI2CErrorText(error)}\r\n`)
+            bus.i2cWriteReg(address, register, bytes, speed)
+                .then((result) => {
+                    console.log(result);
+                    if (getI2CErrorText(result.error)) {
+                        printText(`${getI2CErrorText(result.error)}\r\n`)
                     }
                 })
-                .catch(() => { printText("Network error!\r\n") });
+                .catch((err) => {
+                    console.log(err);
+                    printText("Network error!\r\n")
+                });
         }
     </script>
 </body>
