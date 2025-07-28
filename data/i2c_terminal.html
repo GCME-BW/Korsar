@@ -134,7 +134,14 @@
                             printText(`Got less bytes from device than expected; probably answer from device is not correct; here are bytes from device: ${(response.read).map((byte) => stringToHex(byte))}\r\n`);
                         }
                         else {
-                            printText(`Got following bytes from device: ${(response.read).map((byte) => stringToHex(byte))}\r\n`);
+                            printText(`Got following bytes from device:\r\n`);
+                            printText(`[Dec]: ${response.read.join(", ")}\r\n`);
+                            printText(`[Hex]: ${Array.from(response.read).map((byte) => stringToHex(byte)).join(", ")}\r\n`);
+                            if (response.read.length == 1) {
+                                printText(`[Bin]: ---------------------------------\r\n`);
+                                printText(`[Bin]: | ${response.read[0] >> 7} | ${(response.read[0] & 64) >> 6} | ${(response.read[0] & 32) >> 5} | ${(response.read[0] & 16) >> 4} | ${(response.read[0] & 8) >> 3} | ${(response.read[0] & 4) >> 2} | ${(response.read[0] & 2) >> 1} | ${response.read[0] & 1} |\r\n`);
+                                printText(`[Bin]: ---------------------------------\r\n`);
+                            }
                         }
                     }
                 })
